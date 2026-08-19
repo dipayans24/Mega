@@ -344,7 +344,7 @@ def processMEGA(Funnels, filePath, ):
         AI.to_csv(output_filename, index=False, sep=",") # Overwrite AI file without duplicates
         print(f"AI count = {len(AI)}.")
 
-  return FileList, ExcludedData, FunnelCount
+  return FileList, ExcludedData, FunnelCount, Unmatched_SlugsDF
 
 def updateMegaSheet(credential_Upload, sheet_id, file):
   # Authentication
