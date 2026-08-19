@@ -294,9 +294,11 @@ def processMEGA(Funnels, filePath, ):
 
   if len(Unmatched_Slugs) > 0:
     try:
-        st.dataframe(Unmatched_Slugs.loc[Unmatched_Slugs["Payment Slug_x"].str.len() < 36, "Payment Slug_x"])
+        Unmatched_SlugsDF = Unmatched_Slugs.loc[Unmatched_Slugs["Payment Slug_x"].str.len() < 36, "Payment Slug_x"].drop_duplicates()
     except:
-        st.dataframe(Unmatched_Slugs.loc[Unmatched_Slugs["Payment Slug"].str.len() < 36, "Payment Slug"])
+        Unmatched_SlugsDF = Unmatched_Slugs.loc[Unmatched_Slugs["Payment Slug"].str.len() < 36, "Payment Slug"].drop_duplicates()
+  else:
+        Unmatched_SlugsDF = None
 
 
   has_ai = any(kw.startswith("AI_") for kw in FileList)
@@ -462,10 +464,13 @@ if WSDate and Funnels and GdriveCredentials and credential_Upload:
 
             status.update(label="Completed!",expanded=False)
 
-            FileList, ExcludedData, FunnelCount = processMEGA(Funnels,filePath)
+            FileList, ExcludedData, FunnelCount, Unmatched_SlugsDF = processMEGA(Funnels,filePath)
 
         st.dataframe(MegaSheetInfo.loc[condition, ["Date", "sheet_id"]] , hide_index=True)
 
+        if len(Unmatched_SlugsDF) is not None:
+            st.dataframe(Unmatched_SlugsDF)
+         
         st.dataframe(FunnelCount, hide_index=True)
         
         TotalFiles = FileList+ExcludedData if IncludeExcludeData is True else FileList
