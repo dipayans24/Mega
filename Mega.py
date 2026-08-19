@@ -469,7 +469,7 @@ if WSDate and Funnels and GdriveCredentials and credential_Upload:
         st.dataframe(MegaSheetInfo.loc[condition, ["Date", "sheet_id"]] , hide_index=True)
 
         if len(Unmatched_SlugsDF) is not None:
-            st.dataframe(Unmatched_SlugsDF)
+            st.dataframe(Unmatched_SlugsDF,  hide_index=True)
          
         st.dataframe(FunnelCount, hide_index=True)
         
@@ -505,14 +505,6 @@ if WSDate and Funnels and GdriveCredentials and credential_Upload:
         st.info(sheet_id)
 
     if "TotalFiles" in st.session_state:
-        # upload = st.button("Upload Data?", type="primary", key= "upload" )
-
-        # TotalFiles = st.session_state["TotalFiles"]
-        # sheet_id = st.session_state["sheet_id"]
-        # credential_Upload = st.session_state["credential_Upload"]
-        # if upload:
-        #     intilizeUpload(TotalFiles, sheet_id, credential_Upload) 
-
         if "upload_done" not in st.session_state:
             st.session_state["upload_done"] = False
 
