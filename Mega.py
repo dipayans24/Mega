@@ -270,7 +270,8 @@ def processMEGA(Funnels, filePath, ):
     FunnelPayment.drop_duplicates(subset=["Phone Number"], inplace=True, ignore_index=True)
     FunnelPayment.drop(columns=["EmailLC"], inplace=True)
 
-    columns = ["PaymentFunnel" , "Payment Id", "Payment Method", "Amount", "Email", "Phone Number", "Payment Slug",  "Status", "Tags", "CreatedAt", "Source", "woocommerce OrderID", "Age Group", "Customer Name", "Business", "Profession (LSQ)", "Profession (PG)", "Abandon Cart"]
+    columns = ["PaymentFunnel" , "Payment Id", "Payment Method", "Amount", "Email", "Phone Number", "Payment Slug",  "Status", "Tags", "CreatedAt", "Source", 
+               "woocommerce OrderID", "Age Group", "Customer Name", "Business", "Profession (PG)", "Abandon Cart"]
 
     FunnelPayment = FunnelPayment[columns]
 
