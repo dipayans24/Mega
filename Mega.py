@@ -218,7 +218,7 @@ def CountIf(Main_File, Current_File, MFCol, CFCol, filename):
 
 #  Generate the MEGA Report
 
-def processMEGA(Funnels, filePath, ):
+def processMEGA(Funnels, filePath  ):
   FileList = []
 
   ExcludedData = []
@@ -270,7 +270,13 @@ def processMEGA(Funnels, filePath, ):
     FunnelPayment.drop_duplicates(subset=["Phone Number"], inplace=True, ignore_index=True)
     FunnelPayment.drop(columns=["EmailLC"], inplace=True)
 
-    columns = ["PaymentFunnel" , "Payment Id", "Payment Method", "Amount", "Email", "Phone Number", "Payment Slug",  "Status", "Tags", "CreatedAt", "Source", 
+    #OTO NON OTO
+    Funnel_OTO_NONOTO = OTO_NONOTO[OTO_NONOTO["Funnel"] == Funnel][["OTO_NONOTO_Amount", "OTO_NONOTO"]]
+    Funnel_OTO_NONOTO["OTO_NONOTO_Amount"] = Funnel_OTO_NONOTO["OTO_NONOTO_Amount"].astype(int)
+    FunnelPayment["Amount_Round"] = FunnelPayment["Amount"].map(floor).astype(int)
+    FunnelPayment = FunnelPayment.merge(Funnel_OTO_NONOTO , left_on="Amount_Round", right_on="OTO_NONOTO_Amount", how="left").drop(columns=["Amount_Round"	, "OTO_NONOTO_Amount"])
+   
+    columns = ["PaymentFunnel" , "Payment Id", "Payment Method", "Amount", "Email", "Phone Number", "Payment Slug",  "Status", "OTO_NONOTO", "Tags", "CreatedAt", "Source", 
                "woocommerce OrderID", "Age Group", "Customer Name", "Business", "Profession (PG)", "Abandon Cart"]
 
     FunnelPayment = FunnelPayment[columns]
@@ -449,11 +455,16 @@ if WSDate and Funnels and GdriveCredentials and credential_Upload:
             BatchDate = check_session_state("1szfXpbxy1lITxMU53e0TqlV_PjRVGv3OKTpI1wjoegk", "BatchDate", "BatchDate", credential_Upload, clearPreviousData)
  
             ExcludedTimings = check_session_state("1szfXpbxy1lITxMU53e0TqlV_PjRVGv3OKTpI1wjoegk", "ExcludedTimings", "ExcludedTimings", credential_Upload, clearPreviousData)
- 
-            MegaSheetInfo = check_session_state("1szfXpbxy1lITxMU53e0TqlV_PjRVGv3OKTpI1wjoegk", "MegaSheetInfo", "MegaSheetInfo", credential_Upload, clearPreviousData)
- 
+         
+            try:
+               MegaSheetInfo = check_session_state("1szfXpbxy1lITxMU53e0TqlV_PjRVGv3OKTpI1wjoegk", "MegaSheetInfo", "MegaSheetInfo", credential_Upload, clearPreviousData)
+            except:
+               st.error("Check the WS Date. No MEGA Sheet Found for the entered WS Date.")
+             
             ExcludeAmount = check_session_state("1szfXpbxy1lITxMU53e0TqlV_PjRVGv3OKTpI1wjoegk", "ExcludeAmount", "ExcludedAmount", credential_Upload, clearPreviousData) # Fetch amounts to exclude
 
+            OTO_NONOTO = check_session_state("1szfXpbxy1lITxMU53e0TqlV_PjRVGv3OKTpI1wjoegk", "OTO_NONOTO", "OTO_NONOTO", credential_Upload, clearPreviousData)  # Fetch  OTO_NONOTO Sheet
+         
             EA = ExcludeAmount.groupby("Funnel").apply(lambda x:  x["Amount"].astype(float).unique()).reset_index() # Group and find unique float amounts
             EA.columns = ["Funnel", "Amount"] # Rename columns
             ExcludeAmount = EA.set_index("Funnel")["Amount"].to_dict() # Convert to lookup dictionary
