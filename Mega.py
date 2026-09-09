@@ -417,7 +417,7 @@ credential_Upload = st.file_uploader("Upload Credentials File", type = ["json"])
 GdriveCredentials =  st.file_uploader("Upload GDrive File", type = ["json"]) 
 Funnels = st.multiselect(label="Select the Funnels", options=["10xTechies", "AI", "Python", "Excel", "SMAI", "DRF", "PU", "AI TV", "AI BootcampPaid"])
 
-col1, col2, col3 = st.columns(3)    
+col1, col2, col3, col4 = st.columns(4)    
 with col1:
     download = st.checkbox("Download MEGA", persist_state="page", key="downloadKey")
 
@@ -425,6 +425,9 @@ with col2:
     IncludeExcludeData = st.checkbox("Include Excluded Data?")
 
 with col3:
+    IgnoreFunnelCount = st.checkbox("Exclude FunnelCount")
+ 
+with col4:
    clearPreviousData = st.checkbox("Clear Data?")
 
 if WSDate and Funnels and GdriveCredentials and credential_Upload:
@@ -502,7 +505,8 @@ if WSDate and Funnels and GdriveCredentials and credential_Upload:
                     data["CreatedAt"] = data["CreatedAt"].astype('M8[s]').dt.strftime("%Y-%m-%d %H:%M:%S")
                     data.to_excel(f, sheet_name=file.split("_")[0], index=False)
 
-                FunnelCount.to_excel(f, sheet_name="FunnelCount", index=False)
+                    if not IgnoreFunnelCount:
+                        FunnelCount.to_excel(f, sheet_name="FunnelCount", index=False)
 
             with open(MegaFileName, "rb") as f:
                 st.download_button(
