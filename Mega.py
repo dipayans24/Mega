@@ -426,16 +426,16 @@ Funnels = st.multiselect(label="Select the Funnels", options=["10xTechies", "AI"
 
 col1, col2, col3, col4 = st.columns(4)    
 with col1:
-    download = st.checkbox("Download MEGA", persist_state="page", key="downloadKey")
+    download = st.checkbox("Download MEGA", persist_state="page", key="downloadKey", width = "stretch")
 
 with col2:
-    IncludeExcludeData = st.checkbox("Include Excluded Data?")
+    IncludeExcludeData = st.checkbox("Include Excluded Data?", width = "stretch")
 
 with col3:
-    IncludeFunnelCount = st.checkbox("Include FunnelCount Sheet", help = "Works only, if 'Download MEGA' is checked")
+    IncludeFunnelCount = st.checkbox("Include FunnelCount Sheet", help = "Works only, if 'Download MEGA' is checked", width = "stretch")
  
 with col4:
-   clearPreviousData = st.checkbox("Clear Data?")
+   clearPreviousData = st.checkbox("Clear Data?", width = "stretch")
 
 if WSDate and Funnels and GdriveCredentials and credential_Upload:
     genbtn = st.button("Generate Data", type="primary", on_click=None )
