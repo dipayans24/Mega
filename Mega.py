@@ -141,7 +141,7 @@ def getSheet(sheet_id, sheet_name, credential_Upload):
       return None
 
 #remove duplicates between AI and non AI Funnel
-def remove_duplicates(Funnel, has_ai, has_bootcamp_paid):
+def remove_duplicates(Funnel, has_ai, has_bootcamp_paid, FileList, FunnelCount):
     if has_ai and has_bootcamp_paid:
         DFFilePath = [i for i in FileList if i.startswith(f"{Funnel}_")][0] # Locate DF CSV path
         DFBootcampPaidFilePath = [i for i in FileList if i.startswith(f"{Funnel} BootcampPaid")][0] # Locate Bootcamp CSV path
@@ -166,7 +166,7 @@ def remove_duplicates(Funnel, has_ai, has_bootcamp_paid):
 
         DF[TotalColName] = DF[CurrentFileSumColumns].sum(axis=1).gt(0).map({True: 'Matched', False: 'Unmatched'}) # Determine if any criteria matched
 
-        print(len(DF[DF[TotalColName] == "Matched"]))
+        st.write(f"Number of duplicates - {len(DF[DF[TotalColName] == "Matched"])}")
         DF[DF[TotalColName] == "Matched"].to_csv(f"{Funnel}_Bootcamp_dups.csv", index=False)
         DF = DF[DF[TotalColName] == "Unmatched"] # Remove matched rows from DF funnel
 
@@ -178,8 +178,10 @@ def remove_duplicates(Funnel, has_ai, has_bootcamp_paid):
         if len(DF) > 0:
           output_filename = f"{Funnel}_{WSDate}.csv" # Define output name
           DF.to_csv(output_filename, index=False, sep=",") # Overwrite DF file without duplicates
-          print(f"{Funnel} count = {len(DF)}.")
-         
+          st.write(f"{Funnel} count = {len(DF)}.")
+
+    return FunnelCount
+
 #Pre-Processing Payment Report and getDates Functions
 def generatePaymentReport(filePath):
   paymentReport = pd.read_csv(filePath[0], sep=",", date_format="%Y-%m-%d %H:%M:%S", dayfirst=True,  low_memory=False)
@@ -350,86 +352,87 @@ def processMEGA(Funnels, filePath  ):
 
   has_ai = any(kw.startswith("AI_") for kw in FileList)
   has_bootcamp_paid = any(kw.startswith("AI BootcampPaid") for kw in FileList)
-  
+  FunnelCount = remove_duplicates("AI", has_ai, has_bootcamp_paid, FileList, FunnelCount)
+
   has_python = any(kw.startswith("Python_") for kw in FileList)
   has_python_paid = any(kw.startswith("Python BootcampPaid") for kw in FileList)
-  
-  if has_ai and has_bootcamp_paid:
-    AIFilePath = [i for i in FileList if i.startswith("AI_")][0] # Locate AI CSV path
-    AIBootcampPaidFilePath = [i for i in FileList if i.startswith("AI BootcampPaid")][0] # Locate Bootcamp CSV path
-    AI = pd.read_csv(AIFilePath) # Load AI data
-    AIBootcampPaid = pd.read_csv(AIBootcampPaidFilePath) # Load Bootcamp data
-  
-    MFCombinations = ['Email', 'Phone Number'] # Define matching columns
-    AIBootcampSheetCombinations = ['Email',  'Phone Number'] # Define target matching columns
-  
-    SumColNames = [] # Initialize list for match column names
-  
-    AIBootcampPaid["Phone Number"] = AIBootcampPaid["Phone Number"].astype(str) # Stringify phone for comparison
-    AI["Phone Number"] = AI["Phone Number"].astype(str) # Stringify phone for comparison
-  
-    CurrentFileSumColumns = [] # Tracks specific generated columns
-    for MFCol, CFCol  in zip(MFCombinations, AIBootcampSheetCombinations):
-        AI, NewColName = CountIf(AI, AIBootcampPaid, MFCol, CFCol, Funnel) # Check for overlaps
-        SumColNames.append(NewColName) # Track col name
-        CurrentFileSumColumns.append(NewColName) # Track for summation
-  
-    TotalColName = "Total" # Name indicator column
-  
-    AI[TotalColName] = AI[CurrentFileSumColumns].sum(axis=1).gt(0).map({True: 'Matched', False: 'Unmatched'}) # Determine if any criteria matched
-  
-    print(len(AI[AI[TotalColName] == "Matched"]))
-    AI[AI[TotalColName] == "Matched"].to_csv("Bootcamp_dups.csv", index=False)
-    AI = AI[AI[TotalColName] == "Unmatched"] # Remove matched rows from AI funnel
-  
-    FunnelCount.loc[(FunnelCount["Funnel"]=="AI"), "Count"] = len(AI) # Update counts table
-    AI.drop(columns=CurrentFileSumColumns+[TotalColName], inplace=True) # Remove comparison helpers
-  
-    AI.rename(columns={"Payment Slug_y": "ExoticSlugs", "Payment Slug_x": "Payment Slug"}, inplace=True) # Fix renamed columns after merge
-  
-    if len(AI) > 0:
-      output_filename = f"AI_{WSDate}.csv" # Define output name
-      AI.to_csv(output_filename, index=False, sep=",") # Overwrite AI file without duplicates
-      print(f"AI count = {len(AI)}.")
-  
-  if has_python and has_python_paid:
-    PythonFilePath = [i for i in FileList if i.startswith("Python_")][0] # Locate Python CSV path
-    PythonBootcampPaidFilePath = [i for i in FileList if i.startswith("Python BootcampPaid")][0] # Locate Bootcamp CSV path
-    Python = pd.read_csv(PythonFilePath) # Load Python data
-    PythonBootcampPaid = pd.read_csv(PythonBootcampPaidFilePath) # Load Bootcamp data
-  
-    MFCombinations = ['Email', 'Phone Number'] # Define matching columns
-    PythonBootcampSheetCombinations = ['Email',  'Phone Number'] # Define target matching columns
-  
-    SumColNames = [] # Initialize list for match column names
-  
-    PythonBootcampPaid["Phone Number"] = PythonBootcampPaid["Phone Number"].astype(str) # Stringify phone for comparison
-    Python["Phone Number"] = Python["Phone Number"].astype(str) # Stringify phone for comparison
-  
-    CurrentFileSumColumns = [] # Tracks specific generated columns
-    for MFCol, CFCol  in zip(MFCombinations, PythonBootcampSheetCombinations):
-        Python, NewColName = CountIf(Python, PythonBootcampPaid, MFCol, CFCol, Funnel) # Check for overlaps
-        SumColNames.append(NewColName) # Track col name
-        CurrentFileSumColumns.append(NewColName) # Track for summation
-  
-    TotalColName = "Total" # Name indicator column
-  
-    Python[TotalColName] = Python[CurrentFileSumColumns].sum(axis=1).gt(0).map({True: 'Matched', False: 'Unmatched'}) # Determine if any criteria matched
-  
-    print(len(Python[Python[TotalColName] == "Matched"]))
-    Python[Python[TotalColName] == "Matched"].to_csv("Bootcamp_dups.csv", index=False)
-    Python = Python[Python[TotalColName] == "Unmatched"] # Remove matched rows from Python funnel
-  
-    FunnelCount.loc[(FunnelCount["Funnel"]=="Python"), "Count"] = len(Python) # Update counts table
-    Python.drop(columns=CurrentFileSumColumns+[TotalColName], inplace=True) # Remove comparison helpers
-  
-    Python.rename(columns={"Payment Slug_y": "ExoticSlugs", "Payment Slug_x": "Payment Slug"}, inplace=True) # Fix renamed columns after merge
-  
-    if len(Python) > 0:
-      output_filename = f"Python_{WSDate}.csv" # Define output name
-      Python.to_csv(output_filename, index=False, sep=",") # Overwrite Python file without duplicates
-      print(f"Python count = {len(Python)}.")
-  
+  FunnelCount = remove_duplicates("Python", has_ai, has_bootcamp_paid, FileList, FunnelCount)
+
+#   if has_ai and has_bootcamp_paid:
+#     AIFilePath = [i for i in FileList if i.startswith("AI_")][0] # Locate AI CSV path
+#     AIBootcampPaidFilePath = [i for i in FileList if i.startswith("AI BootcampPaid")][0] # Locate Bootcamp CSV path
+#     AI = pd.read_csv(AIFilePath) # Load AI data
+#     AIBootcampPaid = pd.read_csv(AIBootcampPaidFilePath) # Load Bootcamp data
+
+#     MFCombinations = ['Email', 'Phone Number'] # Define matching columns
+#     AIBootcampSheetCombinations = ['Email',  'Phone Number'] # Define target matching columns
+
+#     SumColNames = [] # Initialize list for match column names
+
+#     AIBootcampPaid["Phone Number"] = AIBootcampPaid["Phone Number"].astype(str) # Stringify phone for comparison
+#     AI["Phone Number"] = AI["Phone Number"].astype(str) # Stringify phone for comparison
+
+#     CurrentFileSumColumns = [] # Tracks specific generated columns
+#     for MFCol, CFCol  in zip(MFCombinations, AIBootcampSheetCombinations):
+#         AI, NewColName = CountIf(AI, AIBootcampPaid, MFCol, CFCol, Funnel) # Check for overlaps
+#         SumColNames.append(NewColName) # Track col name
+#         CurrentFileSumColumns.append(NewColName) # Track for summation
+
+#     TotalColName = "Total" # Name indicator column
+
+#     AI[TotalColName] = AI[CurrentFileSumColumns].sum(axis=1).gt(0).map({True: 'Matched', False: 'Unmatched'}) # Determine if any criteria matched
+
+#     st.write(len(AI[AI[TotalColName] == "Matched"]))
+#     AI[AI[TotalColName] == "Matched"].to_csv("Bootcamp_dups.csv", index=False)
+#     AI = AI[AI[TotalColName] == "Unmatched"] # Remove matched rows from AI funnel
+
+#     FunnelCount.loc[(FunnelCount["Funnel"]=="AI"), "Count"] = len(AI) # Update counts table
+#     AI.drop(columns=CurrentFileSumColumns+[TotalColName], inplace=True) # Remove comparison helpers
+
+#     AI.rename(columns={"Payment Slug_y": "ExoticSlugs", "Payment Slug_x": "Payment Slug"}, inplace=True) # Fix renamed columns after merge
+
+#     if len(AI) > 0:
+#         output_filename = f"AI_{WSDate}.csv" # Define output name
+#         AI.to_csv(output_filename, index=False, sep=",") # Overwrite AI file without duplicates
+#         st.write(f"AI count = {len(AI)}.")
+
+#   if has_python and has_python_paid:
+#     PythonFilePath = [i for i in FileList if i.startswith("Python_")][0] # Locate Python CSV path
+#     PythonBootcampPaidFilePath = [i for i in FileList if i.startswith("Python BootcampPaid")][0] # Locate Bootcamp CSV path
+#     Python = pd.read_csv(PythonFilePath) # Load Python data
+#     PythonBootcampPaid = pd.read_csv(PythonBootcampPaidFilePath) # Load Bootcamp data
+
+#     MFCombinations = ['Email', 'Phone Number'] # Define matching columns
+#     PythonBootcampSheetCombinations = ['Email',  'Phone Number'] # Define target matching columns
+
+#     SumColNames = [] # Initialize list for match column names
+
+#     PythonBootcampPaid["Phone Number"] = PythonBootcampPaid["Phone Number"].astype(str) # Stringify phone for comparison
+#     Python["Phone Number"] = Python["Phone Number"].astype(str) # Stringify phone for comparison
+
+#     CurrentFileSumColumns = [] # Tracks specific generated columns
+#     for MFCol, CFCol  in zip(MFCombinations, PythonBootcampSheetCombinations):
+#         Python, NewColName = CountIf(Python, PythonBootcampPaid, MFCol, CFCol, Funnel) # Check for overlaps
+#         SumColNames.append(NewColName) # Track col name
+#         CurrentFileSumColumns.append(NewColName) # Track for summation
+
+#     TotalColName = "Total" # Name indicator column
+
+#     Python[TotalColName] = Python[CurrentFileSumColumns].sum(axis=1).gt(0).map({True: 'Matched', False: 'Unmatched'}) # Determine if any criteria matched
+
+#     st.write(len(Python[Python[TotalColName] == "Matched"]))
+#     Python[Python[TotalColName] == "Matched"].to_csv("Bootcamp_dups.csv", index=False)
+#     Python = Python[Python[TotalColName] == "Unmatched"] # Remove matched rows from Python funnel
+
+#     FunnelCount.loc[(FunnelCount["Funnel"]=="Python"), "Count"] = len(Python) # Update counts table
+#     Python.drop(columns=CurrentFileSumColumns+[TotalColName], inplace=True) # Remove comparison helpers
+
+#     Python.rename(columns={"Payment Slug_y": "ExoticSlugs", "Payment Slug_x": "Payment Slug"}, inplace=True) # Fix renamed columns after merge
+
+#     if len(Python) > 0:
+#         output_filename = f"Python_{WSDate}.csv" # Define output name
+#         Python.to_csv(output_filename, index=False, sep=",") # Overwrite Python file without duplicates
+#         st.write(f"Python count = {len(Python)}.")
   
 
   return FileList, ExcludedData, FunnelCount, Unmatched_SlugsDF
