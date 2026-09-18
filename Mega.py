@@ -277,7 +277,7 @@ def processMEGA(Funnels, filePath  ):
     FunnelPayment = FunnelPayment.merge(Funnel_OTO_NONOTO , left_on="Amount_Round", right_on="OTO_NONOTO_Amount", how="left").drop(columns=["Amount_Round"	, "OTO_NONOTO_Amount"])
    
     columns = ["PaymentFunnel" , "Payment Id", "Payment Method", "Amount", "Email", "Phone Number", "Payment Slug",  "Status", "OTO_NONOTO", "Tags", "CreatedAt", "Source", 
-               "woocommerce OrderID", "Age Group", "Customer Name", "Business", "Profession (PG)", "Abandon Cart"]
+               "woocommerce OrderID", "Age Group", "Customer Name",  "Profession (PG)", "Abandon Cart"]
 
     FunnelPayment = FunnelPayment[columns]
 
@@ -493,7 +493,7 @@ if WSDate and Funnels and GdriveCredentials and credential_Upload:
         if len(Unmatched_SlugsDF) is not None:
             st.dataframe(Unmatched_SlugsDF,  hide_index=True)
          
-        st.dataframe(FunnelCount, hide_index=True)
+        st.dataframe(FunnelCount[FunnelCount["Count"] > 0], hide_index=True)
         
         TotalFiles = FileList+ExcludedData if IncludeExcludeData is True else FileList
 
