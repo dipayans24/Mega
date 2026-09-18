@@ -422,7 +422,7 @@ with col1:
 with col2:
      GdriveCredentials =  st.file_uploader("Upload GDrive File", type = ["json"]) 
  
-Funnels = st.multiselect(label="Select the Funnels", options=["10xTechies", "AI", "Python", "Excel", "SMAI", "DRF", "PU", "AI TV", "AI BootcampPaid"])
+Funnels = st.multiselect(label="Select the Funnels", options=["10xTechies", "AI", "Python", "Excel", "SMAI", "DRF", "PU", "AI TV", "AI BootcampPaid" , "Python BootcampPaid"])
 
 col1, col2, col3, col4 = st.columns(4)    
 with col1:
