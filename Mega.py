@@ -288,6 +288,7 @@ def processMEGA(Funnels, filePath  ):
       st.write(f"Number of date count(s) to be exluded for {Funnel}- {len(excludedStartDates)}.")
 
       for start, end in zip(excludedStartDatesTZ, excludedEndDatesTZ):
+          st.write(f"{Funnel} -- {start} -- {end}")
           df =  FunnelPayment[FunnelPayment["CreatedAt"].between(start, end, inclusive="both")]
           df["StartDate"] = start
           df["EndDate"] = end
@@ -317,7 +318,7 @@ def processMEGA(Funnels, filePath  ):
     Funnel_OTO_NONOTO["OTO_NONOTO_Amount"] = Funnel_OTO_NONOTO["OTO_NONOTO_Amount"].astype(int)
     FunnelPayment["Amount_Round"] = FunnelPayment["Amount"].map(floor).astype(int)
     FunnelPayment = FunnelPayment.merge(Funnel_OTO_NONOTO , left_on="Amount_Round", right_on="OTO_NONOTO_Amount", how="left").drop(columns=["Amount_Round"	, "OTO_NONOTO_Amount"])
-   
+    FunnelPayment = FunnelPayment[~FunnelPayment["Amount"].between(0, 1, inclusive = "right")]
     columns = ["PaymentFunnel" , "Payment Id", "Payment Method", "Amount", "Email", "Phone Number", "Payment Slug",  "Status", "OTO_NONOTO", "Tags", "CreatedAt", "Source", 
                "woocommerce OrderID", "Age Group", "Customer Name",  "Profession (PG)", "Abandon Cart"]
 
@@ -357,83 +358,6 @@ def processMEGA(Funnels, filePath  ):
   has_python = any(kw.startswith("Python_") for kw in FileList)
   has_python_paid = any(kw.startswith("Python BootcampPaid") for kw in FileList)
   FunnelCount = remove_duplicates("Python", has_ai, has_bootcamp_paid, FileList, FunnelCount)
-
-#   if has_ai and has_bootcamp_paid:
-#     AIFilePath = [i for i in FileList if i.startswith("AI_")][0] # Locate AI CSV path
-#     AIBootcampPaidFilePath = [i for i in FileList if i.startswith("AI BootcampPaid")][0] # Locate Bootcamp CSV path
-#     AI = pd.read_csv(AIFilePath) # Load AI data
-#     AIBootcampPaid = pd.read_csv(AIBootcampPaidFilePath) # Load Bootcamp data
-
-#     MFCombinations = ['Email', 'Phone Number'] # Define matching columns
-#     AIBootcampSheetCombinations = ['Email',  'Phone Number'] # Define target matching columns
-
-#     SumColNames = [] # Initialize list for match column names
-
-#     AIBootcampPaid["Phone Number"] = AIBootcampPaid["Phone Number"].astype(str) # Stringify phone for comparison
-#     AI["Phone Number"] = AI["Phone Number"].astype(str) # Stringify phone for comparison
-
-#     CurrentFileSumColumns = [] # Tracks specific generated columns
-#     for MFCol, CFCol  in zip(MFCombinations, AIBootcampSheetCombinations):
-#         AI, NewColName = CountIf(AI, AIBootcampPaid, MFCol, CFCol, Funnel) # Check for overlaps
-#         SumColNames.append(NewColName) # Track col name
-#         CurrentFileSumColumns.append(NewColName) # Track for summation
-
-#     TotalColName = "Total" # Name indicator column
-
-#     AI[TotalColName] = AI[CurrentFileSumColumns].sum(axis=1).gt(0).map({True: 'Matched', False: 'Unmatched'}) # Determine if any criteria matched
-
-#     st.write(len(AI[AI[TotalColName] == "Matched"]))
-#     AI[AI[TotalColName] == "Matched"].to_csv("Bootcamp_dups.csv", index=False)
-#     AI = AI[AI[TotalColName] == "Unmatched"] # Remove matched rows from AI funnel
-
-#     FunnelCount.loc[(FunnelCount["Funnel"]=="AI"), "Count"] = len(AI) # Update counts table
-#     AI.drop(columns=CurrentFileSumColumns+[TotalColName], inplace=True) # Remove comparison helpers
-
-#     AI.rename(columns={"Payment Slug_y": "ExoticSlugs", "Payment Slug_x": "Payment Slug"}, inplace=True) # Fix renamed columns after merge
-
-#     if len(AI) > 0:
-#         output_filename = f"AI_{WSDate}.csv" # Define output name
-#         AI.to_csv(output_filename, index=False, sep=",") # Overwrite AI file without duplicates
-#         st.write(f"AI count = {len(AI)}.")
-
-#   if has_python and has_python_paid:
-#     PythonFilePath = [i for i in FileList if i.startswith("Python_")][0] # Locate Python CSV path
-#     PythonBootcampPaidFilePath = [i for i in FileList if i.startswith("Python BootcampPaid")][0] # Locate Bootcamp CSV path
-#     Python = pd.read_csv(PythonFilePath) # Load Python data
-#     PythonBootcampPaid = pd.read_csv(PythonBootcampPaidFilePath) # Load Bootcamp data
-
-#     MFCombinations = ['Email', 'Phone Number'] # Define matching columns
-#     PythonBootcampSheetCombinations = ['Email',  'Phone Number'] # Define target matching columns
-
-#     SumColNames = [] # Initialize list for match column names
-
-#     PythonBootcampPaid["Phone Number"] = PythonBootcampPaid["Phone Number"].astype(str) # Stringify phone for comparison
-#     Python["Phone Number"] = Python["Phone Number"].astype(str) # Stringify phone for comparison
-
-#     CurrentFileSumColumns = [] # Tracks specific generated columns
-#     for MFCol, CFCol  in zip(MFCombinations, PythonBootcampSheetCombinations):
-#         Python, NewColName = CountIf(Python, PythonBootcampPaid, MFCol, CFCol, Funnel) # Check for overlaps
-#         SumColNames.append(NewColName) # Track col name
-#         CurrentFileSumColumns.append(NewColName) # Track for summation
-
-#     TotalColName = "Total" # Name indicator column
-
-#     Python[TotalColName] = Python[CurrentFileSumColumns].sum(axis=1).gt(0).map({True: 'Matched', False: 'Unmatched'}) # Determine if any criteria matched
-
-#     st.write(len(Python[Python[TotalColName] == "Matched"]))
-#     Python[Python[TotalColName] == "Matched"].to_csv("Bootcamp_dups.csv", index=False)
-#     Python = Python[Python[TotalColName] == "Unmatched"] # Remove matched rows from Python funnel
-
-#     FunnelCount.loc[(FunnelCount["Funnel"]=="Python"), "Count"] = len(Python) # Update counts table
-#     Python.drop(columns=CurrentFileSumColumns+[TotalColName], inplace=True) # Remove comparison helpers
-
-#     Python.rename(columns={"Payment Slug_y": "ExoticSlugs", "Payment Slug_x": "Payment Slug"}, inplace=True) # Fix renamed columns after merge
-
-#     if len(Python) > 0:
-#         output_filename = f"Python_{WSDate}.csv" # Define output name
-#         Python.to_csv(output_filename, index=False, sep=",") # Overwrite Python file without duplicates
-#         st.write(f"Python count = {len(Python)}.")
-  
 
   return FileList, ExcludedData, FunnelCount, Unmatched_SlugsDF
 
