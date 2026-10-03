@@ -353,11 +353,13 @@ def processMEGA(Funnels, filePath  ):
 
   has_ai = any(kw.startswith("AI_") for kw in FileList)
   has_bootcamp_paid = any(kw.startswith("AI BootcampPaid") for kw in FileList)
-  FunnelCount = remove_duplicates("AI", has_ai, has_bootcamp_paid, FileList, FunnelCount)
+  if has_ai and has_bootcamp_paid:
+    FunnelCount = remove_duplicates("AI", has_ai, has_bootcamp_paid, FileList, FunnelCount)
 
   has_python = any(kw.startswith("Python_") for kw in FileList)
   has_python_paid = any(kw.startswith("Python BootcampPaid") for kw in FileList)
-  FunnelCount = remove_duplicates("Python", has_ai, has_bootcamp_paid, FileList, FunnelCount)
+  if has_python and has_python_paid:
+    FunnelCount = remove_duplicates("Python", has_ai, has_bootcamp_paid, FileList, FunnelCount)
 
   return FileList, ExcludedData, FunnelCount, Unmatched_SlugsDF
 
