@@ -373,7 +373,7 @@ def updateMegaSheet(credential_Upload, sheet_id, file):
 
   try:  #Gets the batchname by removing splitting from the "W" part.
         df = pd.read_csv(file, sep=",")
-        columns = ["CreatedAt","Customer Name", "Email", "Phone Number", "Amount", "Age Group", "Payment Slug", "Abandon Cart", "Profession (PG)"]
+        columns = ["CreatedAt","Customer Name", "Email", "Phone Number", "Amount", "Age Group", "Payment Slug", "Profession (PG)", "Abandon Cart"]
         MainFileBatches = file.split(".")[0].replace(f"_{WSDate}", "")
         df = df[columns]
   except:
