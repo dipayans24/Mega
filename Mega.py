@@ -319,8 +319,8 @@ def processMEGA(Funnels, filePath  ):
     FunnelPayment["Amount_Round"] = FunnelPayment["Amount"].map(floor).astype(int)
     FunnelPayment = FunnelPayment.merge(Funnel_OTO_NONOTO , left_on="Amount_Round", right_on="OTO_NONOTO_Amount", how="left").drop(columns=["Amount_Round"	, "OTO_NONOTO_Amount"])
     FunnelPayment = FunnelPayment[~FunnelPayment["Amount"].between(0, 1, inclusive = "right")]
-    columns = ["PaymentFunnel" , "Payment Id", "Payment Method", "Amount", "Email", "Phone Number", "Payment Slug",  "Status", "OTO_NONOTO", "Tags", "CreatedAt", "Source", 
-               "woocommerce OrderID", "Age Group", "Customer Name",  "Profession (PG)", "Abandon Cart"]
+    columns = ["PaymentFunnel" , "Payment Id", "CreatedAt", "Customer Name", "Email", "Phone Number", "Amount", "Age Group", "Payment Slug", "Profession (PG)","Abandon Cart",  
+               "OTO_NONOTO", "Status", "Tags",  "Source", "woocommerce OrderID"]
 
     FunnelPayment = FunnelPayment[columns]
 
