@@ -361,6 +361,50 @@ def processMEGA(Funnels, filePath  ):
   if has_python and has_python_paid:
     FunnelCount = remove_duplicates("Python", has_ai, has_bootcamp_paid, FileList, FunnelCount)
 
+ #------Remove cross funnel duplicates from excel and python
+  all = pd.DataFrame()
+  Python = Excel = None
+   
+  has_ai = [i for i in FileList if i.startswith(f"AI_")][0]
+  
+  try: 
+     has_python = [i for i in FileList if i.startswith(f"Python_")][0]
+     Python = pd.read_csv(has_python)
+     all = pd.concat([all, Python], axis=0)
+     FileList.remove(has_python)
+  except:
+     pass
+   
+  try: 
+     has_excel = [i for i in FileList if i.startswith(f"Excel_")][0]
+     Excel = pd.read_csv(has_excel)
+     all = pd.concat([all, Excel], axis=0)
+     FileList.remove(has_excel)
+  except:
+     pass
+  
+  if Python is not None or Excel is not None:
+    AI = pd.read_csv(has_ai)
+    all = pd.concat([all, AI], axis=0)
+  
+    all["EmailLC"] = all["Email"].str.lower().str.strip() # Create normalized email helper
+    all.drop_duplicates(subset=["EmailLC","Phone Number"], inplace=True, ignore_index=True) # Remove email+phone duplicates
+  
+    all.duplicated(["EmailLC"])
+    all.drop_duplicates(subset=["EmailLC"], inplace=True, ignore_index=True) # Remove email-only duplicates
+  
+    all["Phone Number"] = all["Phone Number"].astype(float, errors="ignore") # Attempt phone conversion
+    all.duplicated(["Phone Number"])
+  
+    all.drop_duplicates(subset=["Phone Number"], inplace=True, ignore_index=True) # Remove phone-only duplicates
+    all.drop(columns=["EmailLC"], inplace=True) # Clean up helper column
+  
+    all = all.sort_values(by=["PaymentFunnel", "CreatedAt"], ascending=[True, True]) # Final chronological sort
+  
+    if len(all) > 0:
+        output_filename = f"AI_{WSDate}.csv" # Construct file name
+        all.to_csv(output_filename, index=False, sep=",") # Save to disk
+     
   return FileList, ExcludedData, FunnelCount, Unmatched_SlugsDF
 
 def updateMegaSheet(credential_Upload, sheet_id, file):
